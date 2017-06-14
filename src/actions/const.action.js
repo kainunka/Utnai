@@ -32,11 +32,5 @@ export const mapDispatchToProps =(dispatch) => {
         userProfile
       })
     },
-    USER_PIC: (userPic) => {
-      dispatch({
-        type: types.USER_PIC,
-        userPic
-      })
-    }
   }
 }

@@ -17,14 +17,15 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import MapViews from './MapViews';
 import Profile from './Profile';
 import Feed from './Feed';
+import ProgressBar from '../_global/ProgressBar';
 
 class Index extends Component {
   static navigationOptions = ({ screenProps }) => ({
-    title: 'Utnai ::: ' + screenProps.nameLogin ,
+    title: (screenProps.nameLogin != null) ? 'Utnai ::: ' + screenProps.nameLogin : 'Loading...' ,
     headerLeft: (<Image source={ require('../img/android/drawable-ldpi.png') } style={{ marginLeft: 10, marginRight: 10 }}  />),
     headerRight: <TouchableOpacity  onPress={() => alert('About us') }><Text style={{ marginRight: 10, color: '#ffffff', opacity: 0.5 }}>About</Text></TouchableOpacity>,
     headerStyle: {
-       backgroundColor: '#2e3289', 
+       backgroundColor: '#01579B', 
        elevation: null
     },
     headerTintColor: "#ffffff",
@@ -40,16 +41,17 @@ class Index extends Component {
     this.state = {
       index: 0,
       routes: [
-        { key: '1', title: 'Map', icon: 'md-map' },
-        { key: '2', title: 'Feed', icon: 'md-paper' },
-        { key: '3', title: 'Profile', icon: 'md-person' }
+        { key: '1', icon: 'md-map' },
+        { key: '2',  icon: 'md-paper' },
+        { key: '3',  icon: 'md-person' }
       ],
+      isLoading: true
     }
   }
 
 
   logout() {
-    const { CHECK_LOGIN, USER_PROFILE, USER_PIC } = this.props;
+    const { CHECK_LOGIN, USER_PROFILE } = this.props;
     AsyncStorage.removeItem('token');
     AsyncStorage.removeItem('userProfile');
     AsyncStorage.removeItem('picture');
@@ -60,13 +62,15 @@ class Index extends Component {
     }); 
   }
 
-  onRegionChange = (region) => { this.setState({region}) }
   _handleChangeTab = index => this.setState({ index })
-  _renderIcon = ({ route }: any) => { return <Icon name={ route.icon } size={24} color='#ffffff' />;  }
-  _renderHeader = props => <TabBar { ...props } style={{ backgroundColor: '#2e3289' }} renderIcon={ this._renderIcon }  />;
+  _renderIcon = ({ route }: any) => { return <Icon name={ route.icon } size={20} color='#757575' />;  }
+  _renderHeader = props => <TabBar { ...props } style={{ backgroundColor: '#ffffff' }} renderIcon={ this._renderIcon }  />;
 
   FirstRoute = () =>  { return  <MapViews />; }
-  SecondRoute = () => { return <Feed />; }
+  SecondRoute = () => { 
+    const { userProfile } = this.props.const;
+    return <Feed imageFacebook={userProfile.id} />;
+  }
   ThirdRoute = () => { return <Profile />; }
   
   _renderScene = SceneMap({
@@ -76,26 +80,29 @@ class Index extends Component {
   })
   
   componentWillMount() {
+		this._retrieveIndex();
+	}
+
+	componentWillReceiveProps(nextProps) {
+		if (nextProps.const.onLocationLat && nextProps.const.onLocationLong) {
+			this.setState({ isLoading: false });
+		}
+	}
+
+  _retrieveIndex() {
     const { onLocationLat, onLocationLong } = this.props.const;
-    const { ON_LOCATION_LAT, ON_LOCATION_LONG, USER_PROFILE, USER_PIC } = this.props;
+    const { ON_LOCATION_LAT, ON_LOCATION_LONG, USER_PROFILE } = this.props;
 
     AsyncStorage.getItem('userProfile').then((getProfile) => {
         USER_PROFILE(JSON.parse(getProfile));
     }); 
 
-    AsyncStorage.getItem('picture').then((getProfile) => {
-        USER_PIC(getProfile);
-    }); 
-
     BackgroundGeolocation.on('location', (location, taskId) => {
-      var coords    = location.coords,
+       var coords    = location.coords,
           timestamp   = location.timestamp
           latitude    = coords.latitude,
           longitude   = coords.longitude,
           speed       = coords.speed;
-
-          console.log("- Location: ", timestamp, latitude, longitude, speed);
-
        ON_LOCATION_LAT(latitude);
        ON_LOCATION_LONG(longitude);
        BackgroundGeolocation.finish(taskId);
@@ -105,7 +112,6 @@ class Index extends Component {
     BackgroundGeolocation.on('motionchange', (location) => {
       ON_LOCATION_LAT(location.location.coords.latitude);
       ON_LOCATION_LONG(location.location.coords.longitude);
-      console.log("TESTSS3");
     });
     BackgroundGeolocation.on('activitychange', this.onActivityChange);
     BackgroundGeolocation.on('providerchange', this.onProviderChange);
@@ -141,30 +147,10 @@ class Index extends Component {
     }, function(state) {
       console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
 
-       BackgroundGeolocation.getCurrentPosition(function(location, taskId) {
-          // This location is already persisted to plugin’s SQLite db.  
-          // If you’ve configured #autoSync: true, the HTTP POST has already started.
-          console.log('- Current position received: ', location);
-          BackgroundGeolocation.finish(taskId);
-        });
-
       if (!state.enabled) {
         BackgroundGeolocation.start(function() {
           console.log("- Start success");
         });
-      }
-    });
-
-    BackgroundGeolocation.getCurrentPosition((location, taskId) => {
-      console.log('location: ', location, 'taskId', taskId);
-      BackgroundGeolocation.finish(taskId);
-    });
-
-    BackgroundGeolocation.on('schedule', function(state) {
-      if (state.enabled) {
-        console.log('- BackgroundGeolocation scheduled start tracking');
-      } else {
-        console.log('- BackgroundGeolocation scheduled stop tracking');
       }
     });
   }
@@ -186,21 +172,17 @@ class Index extends Component {
     BackgroundGeolocation.un('location', (location) => {
        ON_LOCATION_LAT(location.coords.latitude);
        ON_LOCATION_LONG(location.coords.longitude);
-       console.log("TESTSS2");
     });
     BackgroundGeolocation.un('error', this.onError);
     BackgroundGeolocation.un('motionchange', (location) => {
       ON_LOCATION_LAT(location.location.coords.latitude);
       ON_LOCATION_LONG(location.location.coords.longitude);
-      console.log("TESTSS4");
     });
     BackgroundGeolocation.un('activitychange', this.onActivityChange);
     BackgroundGeolocation.un('providerchange', this.onProviderChange);
   }
 
-  onLocation() {
 
-  }
 
   onError(error) {
     var type = error.type;
@@ -216,8 +198,8 @@ class Index extends Component {
 
 
   render() {
-
     return (
+      this.state.isLoading ? <View style={ styles.progressBar }><ProgressBar /></View> : 
       <View style={ styles.container } >
          <TabViewAnimated
           style={ styles.tabView }
@@ -264,7 +246,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     height: 22,
     color: 'white'
-  }
+  },
+   progressBar: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center'
+	},
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Index);

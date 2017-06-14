@@ -23,11 +23,6 @@ const constReducer = (state = initialState.const, action) => {
           ...state,
           userProfile: action.userProfile
         }
-    case types.USER_PIC:
-        return {
-          ...state,
-          userPic: action.userPic
-        }
     default:
 			return state;
   }

@@ -19,10 +19,9 @@ class Profile extends Component {
   }
 
   logout() {
-    const { CHECK_LOGIN, USER_PROFILE, USER_PIC } = this.props;
+    const { CHECK_LOGIN, USER_PROFILE } = this.props;
     AsyncStorage.removeItem('token');
     AsyncStorage.removeItem('userProfile');
-    AsyncStorage.removeItem('picture');
     AsyncStorage.getItem('token').then((logout) => {
           if (!logout) {
             CHECK_LOGIN(false);
@@ -31,7 +30,7 @@ class Profile extends Component {
   }
 
   render() {
-    const { userProfile, userPic } = this.props.const;
+    const { userProfile } = this.props.const;
 
     return (
       <ScrollView>

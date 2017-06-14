@@ -32,7 +32,7 @@ class Login extends Component {
     }
 
   loginFacebook() {
-    const { USER_PROFILE, USER_PIC, CHECK_LOGIN } = this.props;
+    const { USER_PROFILE, CHECK_LOGIN } = this.props;
 
     FBLoginManager.setLoginBehavior(FBLoginManager.LoginBehaviors.Native); // defaults to Native
     FBLoginManager.loginWithPermissions(["email","user_friends"], function(error, data){
@@ -44,9 +44,8 @@ class Login extends Component {
 
         const setStorageToken = AsyncStorage.setItem('token', data.credentials.token);
         const setStorageUser = AsyncStorage.setItem('userProfile', data.profile);
-        const setStoragePic = AsyncStorage.setItem('picture', pic.picture.data.url);
 
-        if (setStorageToken && setStorageUser && setStoragePic) {
+        if (setStorageToken && setStorageUser ) {
             CHECK_LOGIN(true);
         }
             
