@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import {
   StyleSheet,
   AsyncStorage,
-  Image
+  Image,
+  BackHandler
 } from 'react-native';
 import Login from './Login';
 import Index from './page/Index';
@@ -20,7 +21,18 @@ class App extends Component {
     }
   }
 
+  goBack() {
+    try {
+       this.props.navigation.goBack();
+    } catch(error) {
+      console.log('error' + error);
+    }
+
+    return false;
+  }
+
   componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.goBack.bind(this));
 		this._retrieveApp();
 	}
 

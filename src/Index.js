@@ -6,23 +6,25 @@ import {
   Button,
   Image,
   AsyncStorage,
-  TouchableOpacity
+  TouchableOpacity,
+  BackHandler
 } from 'react-native';
 import { connect } from 'react-redux';
-import { mapStateToProps,  mapDispatchToProps} from '../actions/const.action';
+import { mapStateToProps,  mapDispatchToProps} from './actions/const.action';
 import LocationServicesDialogBox from "react-native-android-location-services-dialog-box";
 import BackgroundGeolocation from "react-native-background-geolocation";
 import { TabViewAnimated, TabBar, SceneMap } from 'react-native-tab-view';
 import Icon from 'react-native-vector-icons/Ionicons';
-import MapViews from './MapViews';
-import Profile from './Profile';
-import Feed from './Feed';
-import ProgressBar from '../_global/ProgressBar';
+import MapViews from './page/MapViews';
+import Profile from './page/Profile';
+import Feed from './page/Feed';
+import ProgressBar from './_global/ProgressBar';
+
 
 class Index extends Component {
-  static navigationOptions = ({ screenProps }) => ({
-    title: (screenProps.nameLogin != null) ? 'Utnai ::: ' + screenProps.nameLogin : 'Loading...' ,
-    headerLeft: (<Image source={ require('../img/android/drawable-ldpi.png') } style={{ marginLeft: 10, marginRight: 10 }}  />),
+  static navigationOptions = () => ({
+    title: 'Utnai ::: Welcome ' ,
+    headerLeft: (<Image source={ require('./img/android/drawable-ldpi.png') } style={{ marginLeft: 10, marginRight: 10 }}  />),
     headerRight: <TouchableOpacity  onPress={() => alert('About us') }><Text style={{ marginRight: 10, color: '#ffffff', opacity: 0.5 }}>About</Text></TouchableOpacity>,
     headerStyle: {
        backgroundColor: '#01579B', 
@@ -80,6 +82,10 @@ class Index extends Component {
   })
   
   componentWillMount() {
+    AsyncStorage.getItem('token').then((getToken) => {
+        console.log(getToken);
+    });
+    BackHandler.addEventListener('hardwareBackPress', this.goBack.bind(this));
 		this._retrieveIndex();
 	}
 
@@ -89,13 +95,18 @@ class Index extends Component {
 		}
 	}
 
-  _retrieveIndex() {
+   async _retrieveIndex() {
     const { onLocationLat, onLocationLong } = this.props.const;
     const { ON_LOCATION_LAT, ON_LOCATION_LONG, USER_PROFILE } = this.props;
 
-    AsyncStorage.getItem('userProfile').then((getProfile) => {
+    try {
+      await AsyncStorage.getItem('userProfile').then((getProfile) => {
         USER_PROFILE(JSON.parse(getProfile));
-    }); 
+      }); 
+    } catch (error) {
+      console.log('Error: = ' + error);  
+    }
+    
 
     BackgroundGeolocation.on('location', (location, taskId) => {
        var coords    = location.coords,
@@ -155,7 +166,18 @@ class Index extends Component {
     });
   }
 
+  goBack() {
+    try {
+       this.props.navigation.goBack();
+    } catch(error) {
+      console.log('error' + error);
+    }
+
+    return false;
+  }
+
   componentDidMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.goBack.bind(this));
     LocationServicesDialogBox.checkLocationServicesIsEnabled({
     message: "<h2>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
     ok: "YES",
@@ -169,6 +191,8 @@ class Index extends Component {
   }
 
   componentWillUnMount() {
+    const { ON_LOCATION_LAT, ON_LOCATION_LONG } = this.props;
+
     BackgroundGeolocation.un('location', (location) => {
        ON_LOCATION_LAT(location.coords.latitude);
        ON_LOCATION_LONG(location.coords.longitude);
@@ -181,9 +205,6 @@ class Index extends Component {
     BackgroundGeolocation.un('activitychange', this.onActivityChange);
     BackgroundGeolocation.un('providerchange', this.onProviderChange);
   }
-
-
-
   onError(error) {
     var type = error.type;
     var code = error.code;

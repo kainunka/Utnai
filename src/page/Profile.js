@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { connect } from 'react-redux';
 import { mapStateToProps, mapDispatchToProps } from '../actions/const.action';
-import LoginButton from '../components/LoginButton';
+import AuthButton from '../components/AuthButton';
 
 class Profile extends Component {
   constructor(props) {
@@ -44,8 +44,9 @@ class Profile extends Component {
                 <Text> Email : { userProfile.email }</Text>
                 <Text> Sex : { userProfile.gender }</Text>
             </View>
-
-            <LoginButton status="Logout" social="account facebook" color="#3b5998" icon="sign-out" login={ this.logout } style={ styles.footer } />
+            <View style={ styles.footer }>
+              <AuthButton />
+            </View>     
         </View>
       </ScrollView>
     );

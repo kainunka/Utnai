@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import {
   StyleSheet,
+  View
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { connect } from 'react-redux';
@@ -9,9 +10,7 @@ import { mapStateToProps } from '../actions/const.action';
 class MapViews extends Component {
   constructor(props) {
     super(props);
-
     const { onLocationLat, onLocationLong } = this.props.const;
-
     this.state = {
       markers: [{
         key: '#1',
@@ -56,6 +55,11 @@ const styles = StyleSheet.create({
     map: {
         flex: 1
     },
+    progressBar: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center'
+	  },
 });
 
 export default connect(mapStateToProps)(MapViews);

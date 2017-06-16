@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,70 +10,46 @@ import LoginButton from './components/LoginButton';
 import { connect } from 'react-redux';
 import { mapStateToProps,  mapDispatchToProps} from './actions/const.action';
 import { FBLogin, FBLoginManager } from 'react-native-facebook-login';
+import * as types from './constants/actionTypes';
 
-class Login extends Component {
-  static navigationOptions = ({navigation}) => ({
-    title: `Login user: ${navigation.state.params.user}`,
-  })
-
-  constructor(props) {
-      super(props)
-      this.loginFacebook = this.loginFacebook.bind(this)
-  }
-
-
-   handleLogin = (data) => {
-       if (data == 'test') {
-            this.props.CHECK_LOGIN(true)
-       } else {
-           console.log('Error');
-       }
-        
-    }
-
-  loginFacebook() {
-    const { USER_PROFILE, CHECK_LOGIN } = this.props;
-
+let login = ( navigation, USER_PROFILE, CHECK_LOGIN ) => {
     FBLoginManager.setLoginBehavior(FBLoginManager.LoginBehaviors.Native); // defaults to Native
-    FBLoginManager.loginWithPermissions(["email","user_friends"], function(error, data){
-    if (!error) {
-        const pic = JSON.parse(data.profile);
-        console.log('Login_success = ' + pic.picture.data.url);
+        FBLoginManager.loginWithPermissions(["email","user_friends"], function(error, data){
+        if (!error) {
+            const pic = JSON.parse(data.profile);
+            console.log('Login_success = ' + pic.picture.data.url);
 
-        console.log('Login_success = ', data.credentials.token);
-
-        const setStorageToken = AsyncStorage.setItem('token', data.credentials.token);
-        const setStorageUser = AsyncStorage.setItem('userProfile', data.profile);
-
-        if (setStorageToken && setStorageUser ) {
-            CHECK_LOGIN(true);
-        }
+            console.log('Login_success = ', data.credentials.token);
             
-    } else {
-        console.log("Error: ", error);
-    }
-    })
-  }
-
-
-  render() {
-      var _this = this;
-    return (
-        <Image 
-        style={styles.container} 
-        source={require('./img/bg.png')} >
-            <View style={styles.block3}>
-            <Image source={ require('./img/logo.png') } style={styles.ImageKids} />
-            </View>
-               
-            <View style={styles.block3}>
-                <LoginButton status="Login" social="with Facebooks" color="#3b5998" icon="facebook-official" login={ this.loginFacebook } />
-         
-            </View>
-        </Image>
-    );
-  }
+            const setStorageToken =  AsyncStorage.setItem('token', data.credentials.token);
+            const setStorageUser =  AsyncStorage.setItem('userProfile', data.profile);
+            if (setStorageToken && setStorageUser ) {
+                console.log('Login OK');
+                navigation.dispatch({ 
+                    type: types.LOGIN
+                }); 
+            }            
+        } else {
+            console.log("Error: ", error);
+        }
+    })          
 }
+
+const Login = ({ navigation, USER_PROFILE, CHECK_LOGIN }) =>   (
+    <Image 
+    style={styles.container} 
+    source={require('./img/bg.png')} >
+        <View style={styles.block3}>
+        <Image source={ require('./img/logo.png') } style={styles.ImageKids} />
+        </View>
+            
+        <View style={styles.block3}>
+            <LoginButton status="Login" social="with Facebooks" color="#3b5998" icon="facebook-official" login={() => login(navigation, USER_PROFILE, CHECK_LOGIN) } />
+        
+        </View>
+    </Image>
+)
+
 
 const styles = StyleSheet.create({
   container: {
@@ -105,8 +81,16 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
       color: '#ffffff'
   }
-
-
 });
+
+
+Login.propTypes = {
+  navigation: PropTypes.object.isRequired,
+};
+
+Login.navigationOptions = {
+  header: null,
+};
+
 
 export default connect(mapStateToProps, mapDispatchToProps)(Login);
